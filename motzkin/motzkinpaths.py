@@ -13,7 +13,7 @@ from typing import Iterable, Iterator, List, Optional, Set, Tuple, Union
 import sympy
 from comb_spec_searcher import CombinatorialClass
 
-from motzkinpatterns import CrossingPattern, MotzkinPath
+from .motzkinpatterns import CrossingPattern, MotzkinPath
 
 __all__ = ["MotzkinPaths", "MotzkinPathsStartingWithH", "MotzkinPathsStartingWithU"]
 

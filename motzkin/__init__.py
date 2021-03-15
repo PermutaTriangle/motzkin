@@ -4,3 +4,4 @@ from .motzkinpaths import (
     MotzkinPathsStartingWithU,
 )
 from .motzkinpatterns import CrossingPattern, MotzkinPath
+from .strategies import MotzkinPack

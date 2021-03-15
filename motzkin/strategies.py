@@ -9,13 +9,21 @@ from comb_spec_searcher import (
     StrategyPack,
 )
 
-from motzkinpaths import (
+from .motzkinpaths import (
     CrossingPattern,
     MotzkinPaths,
     MotzkinPathsStartingWithH,
     MotzkinPathsStartingWithU,
 )
-from motzkinpatterns import MotzkinPath
+from .motzkinpatterns import MotzkinPath
+
+__all__ = [
+    "Expansion",
+    "Factor",
+    "PattInsertionFactory",
+    "PattInsertion",
+    "MotzkinPack",
+]
 
 
 class Expansion(DisjointUnionStrategy):
@@ -176,7 +184,7 @@ class Factor(CartesianProductStrategy):
         raise NotImplementedError
 
 
-pack = StrategyPack(
+MotzkinPack = StrategyPack(
     initial_strats=[Factor()],
     inferral_strats=[],
     expansion_strats=[[Expansion(), PattInsertionFactory()]],
@@ -203,14 +211,11 @@ if __name__ == "__main__":
 
     strat3 = Factor()
     assert strat3 == CartesianProductStrategy.from_dict(strat3.to_jsonable())
-
-    print(pack)
-
     from comb_spec_searcher import CombinatorialSpecificationSearcher
 
     patts = [MotzkinPath("UUHD", True), MotzkinPath("DDHU", True)]
     start_class = MotzkinPaths(patts)
-    searcher = CombinatorialSpecificationSearcher(start_class, pack, debug=False)
+    searcher = CombinatorialSpecificationSearcher(start_class, MotzkinPack, debug=False)
 
     spec = searcher.auto_search(status_update=10)
     print(spec)
