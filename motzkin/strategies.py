@@ -207,9 +207,8 @@ if __name__ == "__main__":
     print(pack)
 
     from comb_spec_searcher import CombinatorialSpecificationSearcher
-    from comb_spec_searcher.utils import maple_equations
 
-    patts = [MotzkinPath("UHD", True), MotzkinPath("DHU", True)]
+    patts = [MotzkinPath("UUHD", True), MotzkinPath("DDHU", True)]
     start_class = MotzkinPaths(patts)
     searcher = CombinatorialSpecificationSearcher(start_class, pack, debug=False)
 
@@ -223,5 +222,7 @@ if __name__ == "__main__":
     print(spec.random_sample_object_of_size(15))
     for i in range(100):
         print(f"=== {i} ===")
-        print(spec.count_objects_of_size(i))
-        assert start_class.get_terms(i) == spec.get_terms(i)
+        path = spec.random_sample_object_of_size(i)
+        print(path.ascii_plot())
+        print(path)
+        # assert start_class.get_terms(i) == spec.get_terms(i)

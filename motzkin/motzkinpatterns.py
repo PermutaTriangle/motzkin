@@ -187,7 +187,7 @@ class MotzkinPath(tuple):
     def from_dict(cls, patt: Iterable[str]) -> "MotzkinPath":
         return MotzkinPath(patt)
 
-    def _ascii_plot(self) -> str:
+    def ascii_plot(self) -> str:
         height = 0
         res = [[" " for _ in range(len(self))] for _ in range(len(self))]
         for i, l in enumerate(self):
@@ -203,8 +203,6 @@ class MotzkinPath(tuple):
     def __contains__(self, other) -> bool:
         if isinstance(other, (CrossingPattern, MotzkinPath)):
             return self.contains(other)
-        print(self, type(self))
-        print(other, type(other))
         raise NotImplementedError
 
     def __add__(self, other: Tuple[str, ...]) -> "MotzkinPath":

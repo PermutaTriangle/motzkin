@@ -305,16 +305,6 @@ class MotzkinPathsStartingWithH(MotzkinPaths):
         )
         return [h, rest]
 
-    def from_parts(self, *args, **kwargs) -> MotzkinPath:
-        _, rest = self.factors()
-        rest_obj = None
-        for obj, comb_class in args:
-            if comb_class == rest:
-                rest_obj = obj
-                break
-        assert rest_obj is not None
-        return MotzkinPath(("H",) + rest_obj)
-
     @classmethod
     def class_req(cls) -> Tuple[MotzkinPath]:
         return (MotzkinPath("H"),)
@@ -434,19 +424,6 @@ class MotzkinPathsStartingWithU(MotzkinPaths):
             right = MotzkinPaths(avright, coright)
             return (ud, left, right)
         return None
-
-    def from_parts(self, *args, **kwargs) -> MotzkinPath:
-        factors = self.factors()
-        assert factors is not None
-        _, left, right = factors
-        left_obj, right_obj = None, None
-        for obj, comb_class in args:
-            if comb_class == left:
-                left_obj = obj
-            elif comb_class == right:
-                right_obj = obj
-        assert left_obj is not None and right_obj is not None
-        return MotzkinPath(("U",) + left_obj + ("D",) + right_obj)
 
     @classmethod
     def class_req(cls) -> Tuple[CrossingPattern]:
