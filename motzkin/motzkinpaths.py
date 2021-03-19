@@ -216,7 +216,11 @@ class MotzkinPaths(CombinatorialClass):
                 yield p
 
     def to_jsonable(self, prefix="") -> dict:
-        return {"prefix": prefix, "avoids": self.avoids, "contains": self.contains}
+        d = super().to_jsonable()
+        d["prefix"] = prefix
+        d["avoids"] = self.avoids
+        d["contains"] = self.contains
+        return d
 
     @classmethod
     def from_dict(cls, d: dict) -> "MotzkinPaths":
@@ -328,7 +332,7 @@ class MotzkinPathsStartingWithH(MotzkinPaths):
         )
 
     def to_jsonable(self, prefix: str = "H") -> dict:
-        return MotzkinPaths.to_jsonable(self, prefix=prefix)
+        return super().to_jsonable(prefix=prefix)
 
     def is_empty(self) -> bool:
         if MotzkinPath("H") in self.avoids:
@@ -501,13 +505,13 @@ class MotzkinPathsStartingWithU(MotzkinPaths):
                 yield path
 
     def to_jsonable(self, prefix="U") -> dict:
-        return {
-            "prefix": prefix,
-            "crossing_avoids": tuple(p.to_jsonable() for p in self.avoids),
-            "crossing_contains": tuple(
-                p.to_jsonable() for ps in self.contains for p in ps
-            ),
-        }
+        d = CombinatorialClass.to_jsonable(self)
+        d["prefix"] = prefix
+        d["avoids"] = tuple(p.to_jsonable() for p in self.avoids)
+        d["contains"] = tuple(
+            tuple(p.to_jsonable() for p in ps) for ps in self.contains
+        )
+        return d
 
     def __repr__(self) -> str:
         return (

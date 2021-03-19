@@ -92,10 +92,18 @@ class PattInsertion(DisjointUnionStrategy):
     def formal_step(self) -> str:
         return f"The paths avoid or contain {self.pattern}"
 
+    def to_jsonable(self) -> dict:
+        d = super().to_jsonable()
+        d["pattern"] = self.pattern.to_jsonable()
+        return d
+
     @classmethod
     def from_dict(cls, d: dict) -> "PattInsertion":
+        patt = d.pop("pattern")
         return PattInsertion(
-            pattern=MotzkinPath.from_dict(d.pop("pattern")),
+            pattern=MotzkinPath.from_dict(patt)
+            if isinstance(patt, tuple)
+            else CrossingPattern.from_dict(patt),
             ignore_parent=d.pop("ignore_parent"),
             inferrable=d.pop("inferrable"),
             possibly_empty=d.pop("possibly_empty"),
