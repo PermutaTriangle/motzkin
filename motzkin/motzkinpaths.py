@@ -192,28 +192,30 @@ class MotzkinPaths(CombinatorialClass):
     def is_positive(self) -> bool:
         return bool(self.contains)
 
-    def objects_of_size(self, size: int) -> Iterator[MotzkinPath]:
-        def all_motzkin_paths(size):
-            if size < 0:
-                return
-            if size == 0:
-                yield MotzkinPath()
-                return
-            if size == 1:
-                yield MotzkinPath("H")
-                return
-            for path in all_motzkin_paths(size - 1):
-                yield MotzkinPath(("H",) + path)
-            for i in range(size - 1):
-                for p1 in all_motzkin_paths(i):
-                    for p2 in all_motzkin_paths(size - i - 2):
-                        yield MotzkinPath(("U",) + p1 + ("D",) + p2)
+    PATH_CACHE = {}
 
-        for p in all_motzkin_paths(size):
-            if all(p.avoids(patt) for patt in self.avoids) and all(
-                any(p.contains(patt) for patt in co_list) for co_list in self.contains
-            ):
-                yield p
+    def objects_of_size(self, size: int) -> Iterator[MotzkinPath]:
+        if (self, size) not in self.PATH_CACHE:
+            res = []
+            if size == 0:
+                path = MotzkinPath("")
+                if all(path.avoids(p) for p in self.avoids) and all(
+                    any(path.contains(p) for p in patts) for patts in self.contains
+                ):
+                    res.append(MotzkinPath(""))
+            else:
+                res.extend(
+                    MotzkinPathsStartingWithH(
+                        self.avoids, self.contains
+                    ).objects_of_size(size)
+                )
+                res.extend(
+                    MotzkinPathsStartingWithU(
+                        self.avoids, self.contains
+                    ).objects_of_size(size)
+                )
+            self.PATH_CACHE[(self, size)] = res
+        return self.PATH_CACHE[(self, size)]
 
     def to_jsonable(self, prefix="") -> dict:
         d = super().to_jsonable()
@@ -269,8 +271,8 @@ class MotzkinPaths(CombinatorialClass):
             return "{UD}"
         if self == self.justempty():
             return "{\u03BB}"
-        if self.is_empty():
-            return "\u2205"
+        # if self.is_empty():
+        #     return "\u2205"
 
         avoids = ", ".join(str(p) for p in self.avoids)
         contains = "".join(
@@ -318,11 +320,21 @@ class MotzkinPathsStartingWithH(MotzkinPaths):
         return (MotzkinPath(),), tuple()
 
     def objects_of_size(self, size: int) -> Iterator[MotzkinPath]:
-        if size <= 0:
+        if size < 1:
             return
-        for path in MotzkinPaths.objects_of_size(self, size):
-            if path[0] == "H":
-                yield path
+
+        def trim(patts):
+            def sub_trim(patt):
+                if len(patt) > 0 and patt[0] == "H":
+                    return MotzkinPath(patt[1:])
+                return patt
+
+            return tuple(sub_trim(patt) for patt in patts)
+
+        for path in MotzkinPaths(
+            trim(self.avoids), tuple(trim(patts) for patts in self.contains)
+        ).objects_of_size(size - 1):
+            yield MotzkinPath(("H",) + path)
 
     def maxlen(self) -> int:
         return MotzkinPaths.maxlen(self) + (
@@ -498,11 +510,63 @@ class MotzkinPathsStartingWithU(MotzkinPaths):
         )
 
     def objects_of_size(self, size: int) -> Iterator[MotzkinPath]:
-        if size <= 0:
+        if size < 2:
             return
-        for path in MotzkinPaths.objects_of_size(self, size):
-            if path[0] == "U":
-                yield path
+
+        def trim(patts):
+            def sub_trim(patt):
+                if len(patt) < 1:
+                    return patt
+                if patt[0] == "U":
+                    if patt[-1] == "D":
+                        return MotzkinPath(patt[1:-1], pattern=True)
+                    return MotzkinPath(patt[1:], pattern=True)
+                if patt[-1] == "D":
+                    return MotzkinPath(patt[:-1], pattern=True)
+                return patt
+
+            return tuple(sub_trim(patt) for patt in patts)
+
+        left_avoids = []
+        right_avoids = []
+        crossing_avoids = []
+        for patt in self.avoids:
+            if len(patt.right) == 0:
+                left_avoids.append(patt.left)
+            if len(patt.left) == 0:
+                right_avoids.append(patt.right)
+            if len(patt.right) > 0 and len(patt.left) > 0:
+                crossing_avoids.append(patt)
+
+        left_contains = []
+        right_contains = []
+        crossing_contains = []
+        for patts in self.contains:
+            left_patts = []
+            right_patts = []
+            for patt in patts:
+                left_patts.append(patt.left)
+                right_patts.append(patt.right)
+            left_contains.append(left_patts)
+            right_contains.append(right_patts)
+            if all(len(patt.left) == 0 for patt in patts) or all(
+                len(patt.right) == 0 for patt in patts
+            ):
+                continue
+            crossing_contains.append(patts)
+        left_paths = MotzkinPaths(
+            trim(left_avoids), [trim(patts) for patts in left_contains]
+        )
+        right_paths = MotzkinPaths(right_avoids, right_contains)
+        for i in range(size - 1):
+            for left_path in left_paths.objects_of_size(i):
+                for right_path in right_paths.objects_of_size(size - i - 2):
+                    path = MotzkinPath(("U",) + left_path + ("D",) + right_path)
+                    if all(path.avoids(p) for p in crossing_avoids) and all(
+                        any(path.contains(p) for p in patts)
+                        for patts in crossing_contains
+                    ):
+                        yield path
 
     def to_jsonable(self, prefix="U") -> dict:
         d = CombinatorialClass.to_jsonable(self)
