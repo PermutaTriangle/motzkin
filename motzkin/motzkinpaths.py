@@ -215,7 +215,8 @@ class MotzkinPaths(CombinatorialClass):
                     ).objects_of_size(size)
                 )
             self.PATH_CACHE[(self, size)] = res
-        return self.PATH_CACHE[(self, size)]
+        for p in self.PATH_CACHE[(self, size)]:
+            yield p
 
     def to_jsonable(self, prefix="") -> dict:
         d = super().to_jsonable()
@@ -326,7 +327,7 @@ class MotzkinPathsStartingWithH(MotzkinPaths):
         def trim(patts):
             def sub_trim(patt):
                 if len(patt) > 0 and patt[0] == "H":
-                    return MotzkinPath(patt[1:])
+                    return MotzkinPath(patt[1:], pattern=True)
                 return patt
 
             return tuple(sub_trim(patt) for patt in patts)
